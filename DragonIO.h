@@ -16,24 +16,23 @@
 class DragonIO
 {
 	public:
-	
-	enum mode_t { MODE_NONE, MODE_INPUT, MODE_INPUT_PULLUP, MODE_OUTPUT };
-	enum callback_type_t { TYPE_NONE, TYPE_LOW, TYPE_HIGH, TYPE_CHANGE, TYPE_RISING, TYPE_FALLING };
-	using callback_t = void (*)(uint8_t pin, callback_type_t type);
-	
-	struct data_t
-	{
-		volatile uint8_t *port;				// Порт пина.
-		uint8_t pin;						// Номер пина в порте.
-		mode_t mode:2;						// Режим работы пина. А нужен?
-		uint8_t state_new:1;				// Текущее состояние пина.
-		uint8_t state_old:1;				// Текущее состояние пина.
-		uint8_t __offset:1;					// 
-		callback_type_t callback_type:3;	// Тип псевдопрерывания.
-		callback_t callback;				// Колбек псевдопрерывания.
-	};
-	
-	
+		enum mode_t { MODE_NORMAL, MODE_DELAY, MODE_INTERVAL };
+		enum callback_type_t { TYPE_NONE, TYPE_LOW, TYPE_HIGH, TYPE_CHANGE, TYPE_RISING, TYPE_FALLING };
+		using callback_t = void (*)(uint8_t pin, callback_type_t type);
+		
+		struct data_t
+		{
+			volatile uint8_t *port;				// Порт пина.
+			uint8_t pin;						// Номер пина в порте.
+			uint8_t state_new:1;				// Текущее состояние пина.
+			uint8_t state_old:1;				// Текущее состояние пина.
+			mode_t mode:2;						// Текущий режим работы: Обычный пин, С задержкой, Мигалка.
+			uint8_t __offset:1;					// 
+			callback_type_t callback_type:3;	// Тип псевдопрерывания.
+			callback_t callback;				// Колбек псевдопрерывания.
+			uint32_t toggle_time;				// Время когда будет инверсия состояния пина.
+		};
+		
 		// Конструктор с регистрами, например DragonIO(&PIND, PD3);
 		DragonIO(volatile uint8_t *port, uint8_t pin)
 		{
@@ -52,33 +51,29 @@ class DragonIO
 			return;
 		}
 		
-		void Begin(mode_t mode)
+		// Назначить пин на вход.
+		void Input()
 		{
-			this->_data.mode = mode;
+			DIRECT_MODE_INPUT(this->_data.port, this->_data.pin);
+			DIRECT_WRITE_LOW(this->_data.port, this->_data.pin);
 			
-			switch(mode)
-			{
-				case INPUT:
-				{
-					DIRECT_MODE_INPUT(this->_data.port, this->_data.pin);
-					DIRECT_WRITE_LOW(this->_data.port, this->_data.pin);
-					
-					break;
-				}
-				case INPUT_PULLUP:
-				{
-					DIRECT_MODE_INPUT(this->_data.port, this->_data.pin);
-					DIRECT_WRITE_HIGH(this->_data.port, this->_data.pin);
-					
-					break;
-				}
-				case OUTPUT:
-				{
-					DIRECT_MODE_OUTPUT(this->_data.port, this->_data.pin);
-					
-					break;
-				}
-			}
+			return;
+		}
+		
+		// Назначить пин на вход с подтяжкой к Vcc.
+		void InputPullup()
+		{
+			DIRECT_MODE_INPUT(this->_data.port, this->_data.pin);
+			DIRECT_WRITE_HIGH(this->_data.port, this->_data.pin);
+			
+			return;
+		}
+		
+		// Назначить пин на выход и установить начальное состояние.
+		void Output(bool state = false)
+		{
+			DIRECT_MODE_OUTPUT(this->_data.port, this->_data.pin);
+			(state == true) ? this->High() : this->Low();
 			
 			return;
 		}
@@ -94,7 +89,7 @@ class DragonIO
 		bool Read()
 		{
 			this->_data.state_old = this->_data.state_new;
-			this->_data.state_new = DIRECT_READ(this->_port, this->_pin);
+			this->_data.state_new = DIRECT_READ(this->_data.port, this->_data.pin);
 			
 			return this->_data.state_new;
 		}
@@ -102,7 +97,7 @@ class DragonIO
 		// Записать высокий уровень в пин ( OUTPUT ).
 		void High()
 		{
-			DIRECT_WRITE_HIGH(this->_port, this->_pin);
+			DIRECT_WRITE_HIGH(this->_data.port, this->_data.pin);
 			
 			this->_data.state_old = this->_data.state_new;
 			this->_data.state_new = true;
@@ -110,13 +105,35 @@ class DragonIO
 			return;
 		}
 		
+		// Записать высокий уровень в пин ( OUTPUT ) на указанное время.
+		void High(uint16_t time)
+		{
+			this->High();
+			
+			this->_data.toggle_time = millis() + time;
+			this->_data.mode = MODE_DELAY;
+			
+			return;
+		}
+		
 		// Записать низкий уровень в пин ( OUTPUT ).
 		void Low()
 		{
-			DIRECT_WRITE_LOW(this->_port, this->_pin);
+			DIRECT_WRITE_LOW(this->_data.port, this->_data.pin);
 			
 			this->_data.state_old = this->_data.state_new;
 			this->_data.state_new = false;
+			
+			return;
+		}
+		
+		// Записать низкий уровень в пин ( OUTPUT ) на указанное время.
+		void Low(uint16_t time)
+		{
+			this->Low();
+			
+			this->_data.toggle_time = millis() + time;
+			this->_data.mode = MODE_DELAY;
 			
 			return;
 		}
@@ -130,8 +147,16 @@ class DragonIO
 		}
 		
 		// Псевдопрерывание для работы колбеков ( INPUT, INPUT_PULLUP ).
-		void Processing()
+		void Processing(uint32_t time = millis())
 		{
+			if(this->_data.mode != MODE_NORMAL)
+			{
+				if(this->_data.toggle_time < time)
+				{
+					this->Toggle();
+				}
+			}
+			
 			if(this->_data.callback_type != TYPE_NONE)
 			{
 				this->Read();
@@ -170,9 +195,6 @@ class DragonIO
 		}
 	private:
 		data_t _data;
-		volatile uint8_t *_port;
-		uint8_t _pin;
-		mode_t _mode;
 };
 
 #endif
