@@ -25,7 +25,7 @@ class DragonIO
         DragonIO(volatile uint8_t *port, uint8_t pin)
         {
             this->_data.port = port;
-            this->_data.pin = (1 << pin);
+            this->_data.pin  = (1 << pin);
             
             return;
         }
@@ -33,8 +33,8 @@ class DragonIO
         // Конструктор с пином, например DragonIO(3);
         DragonIO(uint8_t pin)
         {
-            this->_data.port = PIN_TO_BASEREG(pin);
-            this->_data.pin = PIN_TO_BITMASK(pin);
+            this->_data.port = _pin_to_basereg(pin);
+            this->_data.pin  = _pin_to_bitmask(pin);
             
             return;
         }
@@ -42,8 +42,8 @@ class DragonIO
         // Назначить пин на вход.
         void Input()
         {
-            DIRECT_MODE_INPUT(this->_data.port, this->_data.pin);
-            DIRECT_WRITE_LOW(this->_data.port, this->_data.pin);
+            _direct_mode_input(this->_data.port, this->_data.pin);
+            _direct_write_low(this->_data.port, this->_data.pin);
             
             return;
         }
@@ -51,8 +51,8 @@ class DragonIO
         // Назначить пин на вход с подтяжкой к Vcc.
         void InputPullup()
         {
-            DIRECT_MODE_INPUT(this->_data.port, this->_data.pin);
-            DIRECT_WRITE_HIGH(this->_data.port, this->_data.pin);
+            _direct_mode_input(this->_data.port, this->_data.pin);
+            _direct_write_high(this->_data.port, this->_data.pin);
             
             return;
         }
@@ -60,7 +60,7 @@ class DragonIO
         // Назначить пин на выход и установить начальное состояние.
         void Output(bool state = false)
         {
-            DIRECT_MODE_OUTPUT(this->_data.port, this->_data.pin);
+            _direct_mode_output(this->_data.port, this->_data.pin);
             (state == true) ? this->High() : this->Low();
             
             return;
@@ -77,7 +77,7 @@ class DragonIO
         bool Read()
         {
             this->_data.state_old = this->_data.state_new;
-            this->_data.state_new = DIRECT_READ(this->_data.port, this->_data.pin);
+            this->_data.state_new = _direct_read(this->_data.port, this->_data.pin);
             
             return this->_data.state_new;
         }
@@ -85,7 +85,7 @@ class DragonIO
         // Записать высокий уровень в пин ( OUTPUT ).
         void High()
         {
-            DIRECT_WRITE_HIGH(this->_data.port, this->_data.pin);
+            _direct_write_high(this->_data.port, this->_data.pin);
             
             this->_data.state_old = this->_data.state_new;
             this->_data.state_new = true;
@@ -96,7 +96,7 @@ class DragonIO
         // Записать низкий уровень в пин ( OUTPUT ).
         void Low()
         {
-            DIRECT_WRITE_LOW(this->_data.port, this->_data.pin);
+            _direct_write_low(this->_data.port, this->_data.pin);
             
             this->_data.state_old = this->_data.state_new;
             this->_data.state_new = false;
@@ -119,66 +119,77 @@ class DragonIO
             {
                 this->Read();
                 
-                bool is_run = false;
                 switch(this->_data.callback_type)
                 {
                     case TYPE_LOW:
                     {
-                        if(this->_data.state_new == false){ is_run = true; break; }
+                        if(_data.state_new) {
+                            return;
+                        }
                     }
                     case TYPE_HIGH:
                     {
-                        if(this->_data.state_new == true){ is_run = true; break; }
+                        if(!_data.state_new) {
+                            return;
+                        }
                     }
                     case TYPE_CHANGE:
                     {
-                        if(this->_data.state_new != this->_data.state_old){ is_run = true; break; }
+                        if(_data.state_new == _data.state_old) {
+                            return;
+                        }
                     }
                     case TYPE_RISING:
                     {
-                        if(this->_data.state_old == false && this->_data.state_new == true){ is_run = true; break; }
+                        if(_data.state_old || !_data.state_new) {
+                            return;
+                        }
                     }
                     case TYPE_FALLING:
                     {
-                        if(this->_data.state_old == true && this->_data.state_new == false){ is_run = true; break; }
+                        if(!_data.state_old || _data.state_new) {
+                            return;
+                        }
                     }
+                    case TYPE_NONE:
+                    {
+                        return;
+                    }                    
                 }
-                if(is_run == true)
-                {
-                    this->_data.callback(0, this->_data.callback_type);
-                }
+                _data.callback(0, _data.callback_type);
             }
             
             return;
         }
+
     private:
 
 
-    static volatile uint8_t* PIN_TO_BASEREG(uint8_t pin)             
+    static volatile uint8_t* _pin_to_basereg(uint8_t pin)             
     {
         return (portInputRegister(digitalPinToPort(pin)));
     }
-    static uint8_t PIN_TO_BITMASK(uint8_t pin)             
+    static uint8_t _pin_to_bitmask(uint8_t pin)             
     {
         return (digitalPinToBitMask(pin));
     }
-    static uint8_t DIRECT_READ(volatile uint8_t* base, uint8_t mask)
+    static uint8_t _direct_read(volatile uint8_t* base, uint8_t mask)
     {
         return (((*(base)) & (mask)) ? true : false);
     }
-    static uint8_t DIRECT_MODE_INPUT(volatile uint8_t* base, uint8_t mask)
+    static uint8_t _direct_mode_input(volatile uint8_t* base, uint8_t mask)
     {
         return ((*((base)+1)) &= ~(mask));
     }
-    static uint8_t DIRECT_MODE_OUTPUT(volatile uint8_t* base, uint8_t mask)
+    static uint8_t _direct_mode_output(volatile uint8_t* base, uint8_t mask)
     {
         return ((*((base)+1)) |= (mask));
     }
-    static uint8_t DIRECT_WRITE_LOW(volatile uint8_t* base, uint8_t mask)
+    static uint8_t _direct_write_low(volatile uint8_t* base, uint8_t mask)
     {
         return ((*((base)+2)) &= ~(mask));
     }
-    static uint8_t DIRECT_WRITE_HIGH(volatile uint8_t* base, uint8_t mask)
+    static uint8_t _direct_write_high(volatile uint8_t* base, uint8_t mask)
     {
         return ((*((base)+2)) |= (mask));
     }
