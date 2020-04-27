@@ -5,6 +5,8 @@
 #ifndef DragonIO_H
 #define DragonIO_H
 
+#include "FastPin.h"
+
 class DragonIO
 {
     public:
