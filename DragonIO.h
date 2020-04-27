@@ -113,7 +113,7 @@ class DragonIO
         }
         
         // Псевдопрерывание для работы колбеков ( INPUT, INPUT_PULLUP ).
-        void Processing(uint32_t time = millis())
+        void Processing()
         {
             if(this->_data.callback_type != TYPE_NONE)
             {
