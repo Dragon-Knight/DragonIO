@@ -15,8 +15,6 @@ public:
     
     struct data_t
     {
-        volatile uint8_t *port;           // Порт пина.
-        uint8_t pin;                      // Номер пина в порте.
         uint8_t state_new:1;              // Текущее состояние пина.
         uint8_t state_old:1;              // Текущее состояние пина.
         callback_type_t callback_type:3;  // Тип псевдопрерывания.
@@ -24,102 +22,81 @@ public:
     };
 
     // Конструктор с регистрами, например DragonIO(&PIND, PD3);
-    DragonIO(volatile uint8_t *port, uint8_t pin)
-    {
-        this->_data.port = port;
-        this->_data.pin  = (1 << pin);
-        
-        return;
-    }
+    DragonIO(volatile uint8_t *port, uint8_t pin) :
+        _pin(port, pin)
+    {}
     
     // Конструктор с пином, например DragonIO(3);
-    DragonIO(uint8_t pin)
-    {
-        this->_data.port = _pin_to_basereg(pin);
-        this->_data.pin  = _pin_to_bitmask(pin);
-        
-        return;
-    }
+    DragonIO(uint8_t pin) :
+        _pin(pin)
+    {}
     
     // Назначить пин на вход.
-    void Input()
+    void input()
     {
-        _direct_mode_input(this->_data.port, this->_data.pin);
-        _direct_write_low(this->_data.port, this->_data.pin);
-        
-        return;
+        _pin.input();
     }
     
     // Назначить пин на вход с подтяжкой к Vcc.
-    void InputPullup()
+    void pullup()
     {
-        _direct_mode_input(this->_data.port, this->_data.pin);
-        _direct_write_high(this->_data.port, this->_data.pin);
-        
-        return;
+        _pin.pullup();
     }
     
     // Назначить пин на выход и установить начальное состояние.
-    void Output(bool state = false)
+    void output()
     {
-        _direct_mode_output(this->_data.port, this->_data.pin);
-        (state == true) ? this->High() : this->Low();
-        
-        return;
+        _pin.output();
     }
-    
-    // Регистрация псевдопрерывания для пина ( INPUT, INPUT_PULLUP ).
-    void RegCallback(callback_t callback, callback_type_t type)
+    void output(bool state)
     {
-        this->_data.callback = callback;
-        this->_data.callback_type = type;
-    }
+        _pin.output(state);
+    }    
     
     // Прочитать состояние пина ( INPUT, INPUT_PULLUP ).
-    bool Read()
+    bool read()
     {
         this->_data.state_old = this->_data.state_new;
-        this->_data.state_new = _direct_read(this->_data.port, this->_data.pin);
+        this->_data.state_new = _pin.read();
         
         return this->_data.state_new;
     }
     
     // Записать высокий уровень в пин ( OUTPUT ).
-    void High()
+    void high()
     {
-        _direct_write_high(this->_data.port, this->_data.pin);
-        
+        _pin.high();
         this->_data.state_old = this->_data.state_new;
         this->_data.state_new = true;
-        
-        return;
     }
     
     // Записать низкий уровень в пин ( OUTPUT ).
-    void Low()
+    void low()
     {
-        _direct_write_low(this->_data.port, this->_data.pin);
-        
+        _pin.low();
         this->_data.state_old = this->_data.state_new;
         this->_data.state_new = false;
-        
-        return;
+    }
+
+    // Инвертировать состояние пина ( OUTPUT ).
+    void toggle()
+    {
+        _data.state_new ? low() : high();
     }
     
-    // Инвертировать состояние пина ( OUTPUT ).
-    void Toggle()
+    // Регистрация псевдопрерывания для пина ( INPUT, INPUT_PULLUP ).
+    void regCallback(callback_t callback, callback_type_t type)
     {
-        (this->_data.state_new == true) ? this->Low() : this->High();
-        
-        return;
+        this->_data.callback = callback;
+        this->_data.callback_type = type;
     }
     
     // Псевдопрерывание для работы колбеков ( INPUT, INPUT_PULLUP ).
-    void Processing()
+    void processing()
     {
         if(this->_data.callback_type != TYPE_NONE)
         {
-            this->Read();
+            this->read();
             
             switch(this->_data.callback_type)
             {
@@ -165,38 +142,8 @@ public:
     }
 
 private:
-
-    static volatile uint8_t* _pin_to_basereg(uint8_t pin)             
-    {
-        return (portInputRegister(digitalPinToPort(pin)));
-    }
-    static uint8_t _pin_to_bitmask(uint8_t pin)             
-    {
-        return (digitalPinToBitMask(pin));
-    }
-    static uint8_t _direct_read(volatile uint8_t* base, uint8_t mask)
-    {
-        return (((*(base)) & (mask)) ? true : false);
-    }
-    static uint8_t _direct_mode_input(volatile uint8_t* base, uint8_t mask)
-    {
-        return ((*((base)+1)) &= ~(mask));
-    }
-    static uint8_t _direct_mode_output(volatile uint8_t* base, uint8_t mask)
-    {
-        return ((*((base)+1)) |= (mask));
-    }
-    static uint8_t _direct_write_low(volatile uint8_t* base, uint8_t mask)
-    {
-        return ((*((base)+2)) &= ~(mask));
-    }
-    static uint8_t _direct_write_high(volatile uint8_t* base, uint8_t mask)
-    {
-        return ((*((base)+2)) |= (mask));
-    }
-
-    private:
-        data_t _data;
+    FastPin _pin;
+    data_t _data;
 
 };
 

@@ -29,21 +29,21 @@ public:
     // Set pin state to high with duration
     void high(uint16_t duration)
     {
-        _pin.High();
+        _pin.high();
         _update_timer(duration);
     }
 
     // Set pin state to low with duration
     void low(uint16_t duration)
     {
-        _pin.Low();
+        _pin.low();
         _update_timer(duration);
     }
     
     // Invert pin state
     void toggle(uint16_t duration)
     {
-        _pin.Toggle();
+        _pin.toggle();
         _update_timer(duration);
     }
 
@@ -53,7 +53,7 @@ public:
         // If timeout is expired
         if(_end_time <= millis())
         {
-            _pin.Toggle();
+            _pin.toggle();
         }
     }
 
