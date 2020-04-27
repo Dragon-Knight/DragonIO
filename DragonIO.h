@@ -5,14 +5,6 @@
 #ifndef DragonIO_H
 #define DragonIO_H
 
-#define PIN_TO_BASEREG(pin)             (portInputRegister(digitalPinToPort(pin)))
-#define PIN_TO_BITMASK(pin)             (digitalPinToBitMask(pin))
-#define DIRECT_READ(base, mask)         (((*(base)) & (mask)) ? true : false)
-#define DIRECT_MODE_INPUT(base, mask)   ((*((base)+1)) &= ~(mask))
-#define DIRECT_MODE_OUTPUT(base, mask)  ((*((base)+1)) |= (mask))
-#define DIRECT_WRITE_LOW(base, mask)    ((*((base)+2)) &= ~(mask))
-#define DIRECT_WRITE_HIGH(base, mask)   ((*((base)+2)) |= (mask))
-
 class DragonIO
 {
     public:
@@ -28,7 +20,7 @@ class DragonIO
             callback_type_t callback_type:3;  // Тип псевдопрерывания.
             callback_t callback;              // Колбек псевдопрерывания.
         };
-        
+
         // Конструктор с регистрами, например DragonIO(&PIND, PD3);
         DragonIO(volatile uint8_t *port, uint8_t pin)
         {
@@ -160,7 +152,40 @@ class DragonIO
             return;
         }
     private:
+
+
+    static volatile uint8_t* PIN_TO_BASEREG(uint8_t pin)             
+    {
+        return (portInputRegister(digitalPinToPort(pin)));
+    }
+    static uint8_t PIN_TO_BITMASK(uint8_t pin)             
+    {
+        return (digitalPinToBitMask(pin));
+    }
+    static uint8_t DIRECT_READ(volatile uint8_t* base, uint8_t mask)
+    {
+        return (((*(base)) & (mask)) ? true : false);
+    }
+    static uint8_t DIRECT_MODE_INPUT(volatile uint8_t* base, uint8_t mask)
+    {
+        return ((*((base)+1)) &= ~(mask));
+    }
+    static uint8_t DIRECT_MODE_OUTPUT(volatile uint8_t* base, uint8_t mask)
+    {
+        return ((*((base)+1)) |= (mask));
+    }
+    static uint8_t DIRECT_WRITE_LOW(volatile uint8_t* base, uint8_t mask)
+    {
+        return ((*((base)+2)) &= ~(mask));
+    }
+    static uint8_t DIRECT_WRITE_HIGH(volatile uint8_t* base, uint8_t mask)
+    {
+        return ((*((base)+2)) |= (mask));
+    }
+
+    private:
         data_t _data;
+
 };
 
 #endif // end of DragonIO_H
