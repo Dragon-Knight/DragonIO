@@ -2,8 +2,7 @@
     https://github.com/SpenceKonde/ATTinyCore/blob/master/avr/cores/tiny/wiring_digital.c
 */
 
-#ifndef FastPin_H
-#define FastPin_H
+#pragma once
 
 class FastPin
 {
@@ -93,5 +92,3 @@ private:
     }
 
 };
-
-#endif // end of FastPin_H

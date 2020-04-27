@@ -1,12 +1,11 @@
-#ifndef TimedPin_H
-#define TimedPin_H
+#pragma once
 
-#include "FastPin.h"
+#include "DragonIO.h"
 
 class TimedPin
 {
 private:
-    FastPin _pin;
+    DragonIO _pin;
     // When timer will finished
     uint32_t _end_time;
 public:
@@ -20,8 +19,8 @@ public:
         _pin(pin)
     {}
 
-    // cast operator to FastPin
-    operator FastPin() const
+    // cast operator to DragonIO
+    operator DragonIO() const
     {
         return _pin; 
     }
@@ -52,8 +51,7 @@ public:
     void update()
     {
         // If timeout is expired
-        if(_end_time <= millis())
-        {
+        if(_end_time <= millis()) {
             _pin.toggle();
         }
     }
@@ -65,5 +63,3 @@ private:
     }
 
 };
-
-#endif // end of TimedPin_H

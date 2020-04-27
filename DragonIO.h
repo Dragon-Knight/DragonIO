@@ -1,9 +1,4 @@
-/*
-    https://github.com/SpenceKonde/ATTinyCore/blob/master/avr/cores/tiny/wiring_digital.c
-*/
-
-#ifndef DragonIO_H
-#define DragonIO_H
+#pragma once
 
 #include "FastPin.h"
 
@@ -93,7 +88,7 @@ public:
     // Регистрация псевдопрерывания для пина ( INPUT, INPUT_PULLUP ).
     void regCallback(callback_t callback, callback_type_t type)
     {
-        _data.callback = callback;
+        _data.callback      = callback;
         _data.callback_type = type;
     }
     
@@ -152,5 +147,3 @@ private:
     data_t _data;
 
 };
-
-#endif // end of DragonIO_H
