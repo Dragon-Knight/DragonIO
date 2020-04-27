@@ -7,16 +7,61 @@ class TimedPin
 {
 private:
     DragonIO _pin;
-    // When timer started
-    uint32_t _start_time;
+    // When timer will finished
+    uint32_t _end_time;
 public:
+
+        // Constructors
+        TimedPin(volatile uint8_t *port, uint8_t pin) :
+            _pin(port, pin)
+        {}
+        
+        TimedPin(uint8_t pin) :
+            _pin(pin)
+        {}
 
     // cast operator to DragonIO
     operator DragonIO() const
     {
         return _pin; 
     }
+    
+    // Set pin state to high with duration
+    void high(uint16_t duration)
+    {
+        _pin.High();
+        _update_timer(duration);
+    }
 
+    // Set pin state to low with duration
+    void low(uint16_t duration)
+    {
+        _pin.Low();
+        _update_timer(duration);
+    }
+    
+    // Invert pin state
+    void toggle(uint16_t duration)
+    {
+        _pin.Toggle();
+        _update_timer(duration);
+    }
+
+    // Call this method every iteration
+    void update()
+    {
+        // If timeout is expired
+        if(_end_time <= millis())
+        {
+            _pin.Toggle();
+        }
+    }
+
+private:
+    void _update_timer(uint16_t duration)
+    {
+        _end_time = millis() + duration;
+    }
 
 };
 

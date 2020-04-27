@@ -105,17 +105,6 @@ class DragonIO
             return;
         }
         
-        // Записать высокий уровень в пин ( OUTPUT ) на указанное время.
-        void High(uint16_t time)
-        {
-            this->High();
-            
-            this->_data.toggle_time = millis() + time;
-            this->_data.mode = MODE_DELAY;
-            
-            return;
-        }
-        
         // Записать низкий уровень в пин ( OUTPUT ).
         void Low()
         {
@@ -123,17 +112,6 @@ class DragonIO
             
             this->_data.state_old = this->_data.state_new;
             this->_data.state_new = false;
-            
-            return;
-        }
-        
-        // Записать низкий уровень в пин ( OUTPUT ) на указанное время.
-        void Low(uint16_t time)
-        {
-            this->Low();
-            
-            this->_data.toggle_time = millis() + time;
-            this->_data.mode = MODE_DELAY;
             
             return;
         }
