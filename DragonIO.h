@@ -30,6 +30,12 @@ public:
     DragonIO(uint8_t pin) :
         _pin(pin)
     {}
+
+    // cast operator to FastPin
+    operator FastPin() const
+    {
+        return _pin; 
+    }
     
     // Назначить пин на вход.
     void input()

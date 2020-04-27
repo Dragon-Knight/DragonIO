@@ -1,27 +1,27 @@
 #ifndef TimedPin_H
 #define TimedPin_H
 
-#include "DragonIO.h"
+#include "FastPin.h"
 
 class TimedPin
 {
 private:
-    DragonIO _pin;
+    FastPin _pin;
     // When timer will finished
     uint32_t _end_time;
 public:
 
-        // Constructors
-        TimedPin(volatile uint8_t *port, uint8_t pin) :
-            _pin(port, pin)
-        {}
-        
-        TimedPin(uint8_t pin) :
-            _pin(pin)
-        {}
+    // Constructors
+    TimedPin(volatile uint8_t *port, uint8_t pin) :
+        _pin(port, pin)
+    {}
+    
+    TimedPin(uint8_t pin) :
+        _pin(pin)
+    {}
 
-    // cast operator to DragonIO
-    operator DragonIO() const
+    // cast operator to FastPin
+    operator FastPin() const
     {
         return _pin; 
     }
@@ -48,6 +48,7 @@ public:
     }
 
     // Call this method every iteration
+    // Will toogle pin automaticly if duration was expired
     void update()
     {
         // If timeout is expired
