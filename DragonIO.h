@@ -30,7 +30,6 @@ class DragonIO
             uint8_t __offset:1;               // 
             callback_type_t callback_type:3;  // Тип псевдопрерывания.
             callback_t callback;              // Колбек псевдопрерывания.
-            uint32_t toggle_time;             // Время когда будет инверсия состояния пина.
         };
         
         // Конструктор с регистрами, например DragonIO(&PIND, PD3);
@@ -127,14 +126,6 @@ class DragonIO
         // Псевдопрерывание для работы колбеков ( INPUT, INPUT_PULLUP ).
         void Processing(uint32_t time = millis())
         {
-            if(this->_data.mode != MODE_NORMAL)
-            {
-                if(this->_data.toggle_time < time)
-                {
-                    this->Toggle();
-                }
-            }
-            
             if(this->_data.callback_type != TYPE_NONE)
             {
                 this->Read();
