@@ -16,7 +16,6 @@
 class DragonIO
 {
     public:
-        enum mode_t { MODE_NORMAL, MODE_DELAY, MODE_INTERVAL };
         enum callback_type_t { TYPE_NONE, TYPE_LOW, TYPE_HIGH, TYPE_CHANGE, TYPE_RISING, TYPE_FALLING };
         using callback_t = void (*)(uint8_t pin, callback_type_t type);
         
@@ -26,8 +25,6 @@ class DragonIO
             uint8_t pin;                      // Номер пина в порте.
             uint8_t state_new:1;              // Текущее состояние пина.
             uint8_t state_old:1;              // Текущее состояние пина.
-            mode_t mode:2;                    // Текущий режим работы: Обычный пин, С задержкой, Мигалка.
-            uint8_t __offset:1;               // 
             callback_type_t callback_type:3;  // Тип псевдопрерывания.
             callback_t callback;              // Колбек псевдопрерывания.
         };
