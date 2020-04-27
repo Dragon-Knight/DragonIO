@@ -8,9 +8,9 @@
 class FastPin
 {
 private:
-    // Порт пина.
+    // pin port
     volatile uint8_t *_port;
-    // Номер пина в порте.
+    // pin number in port
     uint8_t _pin;
 
 public:
@@ -20,8 +20,6 @@ public:
     {
         _port = port;
         _pin  = (1 << pin);
-        
-        return;
     }
     
     // Конструктор с пином, например FastPin(3);

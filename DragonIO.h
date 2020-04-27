@@ -56,26 +56,26 @@ public:
     // Прочитать состояние пина ( INPUT, INPUT_PULLUP ).
     bool read()
     {
-        this->_data.state_old = this->_data.state_new;
-        this->_data.state_new = _pin.read();
+        _data.state_old = _data.state_new;
+        _data.state_new = _pin.read();
         
-        return this->_data.state_new;
+        return _data.state_new;
     }
     
     // Записать высокий уровень в пин ( OUTPUT ).
     void high()
     {
         _pin.high();
-        this->_data.state_old = this->_data.state_new;
-        this->_data.state_new = true;
+        _data.state_old = _data.state_new;
+        _data.state_new = true;
     }
     
     // Записать низкий уровень в пин ( OUTPUT ).
     void low()
     {
         _pin.low();
-        this->_data.state_old = this->_data.state_new;
-        this->_data.state_new = false;
+        _data.state_old = _data.state_new;
+        _data.state_new = false;
     }
 
     // Инвертировать состояние пина ( OUTPUT ).
@@ -87,18 +87,18 @@ public:
     // Регистрация псевдопрерывания для пина ( INPUT, INPUT_PULLUP ).
     void regCallback(callback_t callback, callback_type_t type)
     {
-        this->_data.callback = callback;
-        this->_data.callback_type = type;
+        _data.callback = callback;
+        _data.callback_type = type;
     }
     
     // Псевдопрерывание для работы колбеков ( INPUT, INPUT_PULLUP ).
     void processing()
     {
-        if(this->_data.callback_type != TYPE_NONE)
+        if(_data.callback_type != TYPE_NONE)
         {
-            this->read();
+            read();
             
-            switch(this->_data.callback_type)
+            switch(_data.callback_type)
             {
                 case TYPE_LOW:
                 {
