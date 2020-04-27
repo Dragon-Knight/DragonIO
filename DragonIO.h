@@ -1,37 +1,23 @@
 /*
-	https://github.com/SpenceKonde/ATTinyCore/blob/master/avr/cores/tiny/wiring_digital.c
-*/
+ * DragonIO.h
+ * Very Fast GPIO library for Arduino and other Arduino-based boards.
+ *
+ *	@author		Nikolai Tikhonov aka Dragon_Knight <dubki4132@mail.ru>, https://vk.com/globalzone_edev
+ *	@licenses	MIT https://opensource.org/licenses/MIT
+ *	@repo		https://github.com/Dragon-Knight/DragonIO
+ *
+ * Special thanks to valmat https://github.com/valmat
+ *
+ */
 
-#ifndef DragonIO_H
-#define DragonIO_H
-
-#define PIN_TO_BASEREG(pin)				(portInputRegister(digitalPinToPort(pin)))
-#define PIN_TO_BITMASK(pin)				(digitalPinToBitMask(pin))
-#define DIRECT_READ(base, mask)			(((*(base)) & (mask)) ? true : false)
-#define DIRECT_MODE_INPUT(base, mask)	((*((base)+1)) &= ~(mask))
-#define DIRECT_MODE_OUTPUT(base, mask)	((*((base)+1)) |= (mask))
-#define DIRECT_WRITE_LOW(base, mask)	((*((base)+2)) &= ~(mask))
-#define DIRECT_WRITE_HIGH(base, mask)	((*((base)+2)) |= (mask))
+#pragma once
 
 class DragonIO
 {
 	public:
-		enum mode_t { MODE_NORMAL, MODE_DELAY, MODE_INTERVAL };
+		enum mode_t { MODE_NORMAL, MODE_DELAY, MODE_BLINK };
 		enum callback_type_t { TYPE_NONE, TYPE_LOW, TYPE_HIGH, TYPE_CHANGE, TYPE_RISING, TYPE_FALLING };
 		using callback_t = void (*)(uint8_t pin, callback_type_t type);
-		
-		struct data_t
-		{
-			volatile uint8_t *port;				// Порт пина.
-			uint8_t pin;						// Номер пина в порте.
-			uint8_t state_new:1;				// Текущее состояние пина.
-			uint8_t state_old:1;				// Текущее состояние пина.
-			mode_t mode:2;						// Текущий режим работы: Обычный пин, С задержкой, Мигалка.
-			uint8_t __offset:1;					// 
-			callback_type_t callback_type:3;	// Тип псевдопрерывания.
-			callback_t callback;				// Колбек псевдопрерывания.
-			uint32_t toggle_time;				// Время когда будет инверсия состояния пина.
-		};
 		
 		// Конструктор с регистрами, например DragonIO(&PIND, PD3);
 		DragonIO(volatile uint8_t *port, uint8_t pin)
@@ -49,6 +35,13 @@ class DragonIO
 			this->_data.pin = PIN_TO_BITMASK(pin);
 			
 			return;
+		}
+		
+		// Регистрация псевдопрерывания для пина ( INPUT, INPUT_PULLUP ).
+		void RegCallback(callback_t callback, callback_type_t type)
+		{
+			this->_data.callback = callback;
+			this->_data.callback_type = type;
 		}
 		
 		// Назначить пин на вход.
@@ -78,13 +71,6 @@ class DragonIO
 			return;
 		}
 		
-		// Регистрация псевдопрерывания для пина ( INPUT, INPUT_PULLUP ).
-		void RegCallback(callback_t callback, callback_type_t type)
-		{
-			this->_data.callback = callback;
-			this->_data.callback_type = type;
-		}
-		
 		// Прочитать состояние пина ( INPUT, INPUT_PULLUP ).
 		bool Read()
 		{
@@ -101,6 +87,7 @@ class DragonIO
 			
 			this->_data.state_old = this->_data.state_new;
 			this->_data.state_new = true;
+			//if(force == true) this->_data.mode = MODE_NORMAL;
 			
 			return;
 		}
@@ -110,7 +97,7 @@ class DragonIO
 		{
 			this->High();
 			
-			this->_data.toggle_time = millis() + time;
+			this->_data.delay_time = millis() + time;
 			this->_data.mode = MODE_DELAY;
 			
 			return;
@@ -123,6 +110,7 @@ class DragonIO
 			
 			this->_data.state_old = this->_data.state_new;
 			this->_data.state_new = false;
+			//if(force == true) this->_data.mode = MODE_NORMAL;
 			
 			return;
 		}
@@ -132,18 +120,28 @@ class DragonIO
 		{
 			this->Low();
 			
-			this->_data.toggle_time = millis() + time;
+			this->_data.delay_time = millis() + time;
 			this->_data.mode = MODE_DELAY;
 			
 			return;
 		}
 		
-		// Инвертировать состояние пина ( OUTPUT ).
-		void Toggle()
+		// Запустить циклическое ВКЛ-ВЫКЛ пина.
+		void Blink(uint16_t time_on, uint16_t time_off)
+		{
+			this->_data.blinkon_time = time_on;
+			this->_data.blinkoff_time = time_off;
+			this->_data.mode = MODE_BLINK;
+			
+			return;
+		}
+		
+		// Инвертировать состояние пина ( OUTPUT ) и вернуть новое состояние.
+		bool Toggle()
 		{
 			(this->_data.state_new == true) ? this->Low() : this->High();
 			
-			return;
+			return this->_data.state_new;
 		}
 		
 		// Псевдопрерывание для работы колбеков ( INPUT, INPUT_PULLUP ).
@@ -151,9 +149,25 @@ class DragonIO
 		{
 			if(this->_data.mode != MODE_NORMAL)
 			{
-				if(this->_data.toggle_time < time)
+				if(this->_data.delay_time < time)
 				{
-					this->Toggle();
+					bool state = this->Toggle();
+					
+					switch(this->_data.mode)
+					{
+						case MODE_DELAY:
+						{
+							this->_data.mode = MODE_NORMAL;
+							
+							break;
+						}
+						case MODE_BLINK:
+						{
+							this->_data.delay_time = ((state == true) ? this->_data.blinkon_time : this->_data.blinkoff_time) + time;
+							
+							break;
+						}
+					}
 				}
 			}
 			
@@ -193,8 +207,30 @@ class DragonIO
 			
 			return;
 		}
+	
+	protected:
+	
 	private:
-		data_t _data;
+		static volatile uint8_t *PIN_TO_BASEREG(uint8_t pin){ return portInputRegister(digitalPinToPort(pin)); }
+		static uint8_t PIN_TO_BITMASK(uint8_t pin){ return digitalPinToBitMask(pin); }
+		static bool DIRECT_READ(volatile uint8_t *base, uint8_t mask){ return (*base & mask) ? true : false; }
+		static void DIRECT_MODE_INPUT(volatile uint8_t *base, uint8_t mask) { *(base+1) &= ~mask; }
+		static void DIRECT_MODE_OUTPUT(volatile uint8_t *base, uint8_t mask){ *(base+1) |= mask; }
+		static void DIRECT_WRITE_LOW(volatile uint8_t *base, uint8_t mask){ *(base+2) &= ~mask; }
+		static void DIRECT_WRITE_HIGH(volatile uint8_t *base, uint8_t mask){ *(base+2) |= mask; }
+		
+		struct data_t
+		{
+			volatile uint8_t *port;				// Порт пина.
+			uint8_t pin;						// Номер пина в порте.
+			uint8_t state_new:1;				// Текущее состояние пина.
+			uint8_t state_old:1;				// Предыдущие состояние пина.
+			mode_t mode:2;						// Текущий режим работы: Обычный пин, С задержкой, Мигалка.
+			uint8_t __offset:1;					// 
+			callback_type_t callback_type:3;	// Тип псевдопрерывания.
+			callback_t callback;				// Колбек псевдопрерывания.
+			uint32_t delay_time;				// Время задержки при MODE_DELAY или MODE_BLINK.
+			uint16_t blinkon_time;				// Время первой стадии 'мигания'.
+			uint16_t blinkoff_time;				// Время второй стадии 'мигания'.
+		} _data;
 };
-
-#endif
