@@ -144,6 +144,18 @@ class DragonIO
 			return this->_data.state_new;
 		}
 		
+		// Выдать строб-импульс с максимально возможной скоростью.
+		bool StrobeHigh()
+		{
+			DIRECT_WRITE_HIGH(this->_data.port, this->_data.pin);
+			DIRECT_WRITE_LOW(this->_data.port, this->_data.pin);
+		}
+		bool StrobeLow()
+		{
+			DIRECT_WRITE_LOW(this->_data.port, this->_data.pin);
+			DIRECT_WRITE_HIGH(this->_data.port, this->_data.pin);
+		}
+		
 		// Псевдопрерывание для работы колбеков ( INPUT, INPUT_PULLUP ).
 		void Processing(uint32_t time = millis())
 		{

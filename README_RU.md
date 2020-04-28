@@ -22,15 +22,16 @@ DragonIO myPin2(3);
 Класс имеет как стандартные методы, так и специфические, призванные облегчить работу с пинами микроконтроллера.
 | Метод | Описание |
 |-------|----------|
+|`vvoid RegCallback(callback_t callback, callback_type_t type);`|Назначить callback функцию псевдопрерывания|
 |`void Input();`|Назначить пин на вход|
 |`void InputPullup();`|Назначить пин на вход с подтяжкой к `Vcc`|
 |`void Output(bool state = false);`|Назначить пин на выход и записать начальное состояние `state`|
-|`void RegCallback(...);`|...|
 |`bool Read();`|Прочитать состояние пина|
 |`void High();`|Записать в пин высокий уровень|
 |`void High(uint16_t time);`|На время записать в пин высокий уровень|
 |`void Low();`|Записать в пин низкий уровень|
 |`void Low(uint16_t time);`|На время записать в пин низкий уровень|
-|`bool Toggle();`|Переключить состояние пина|
 |`void Blink(uint16_t time_on, uint16_t time_off);`|Запустить 'мигание' пина со временем `time_on` и `time_off` в мс.|
-|`void Processing();`|...|
+|`bool Toggle();`|Переключить состояние пина|
+|`void StrobeHigh(), StrobeLow();`|Выдать строб-импульс с частотой 1MHz|
+|`void Processing(uint32_t time = millis())`|Обработка псевдопрерывания|
