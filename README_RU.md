@@ -33,5 +33,8 @@ DragonIO myPin2(3);
 |`void Low(uint16_t time);`|На время записать в пин низкий уровень|
 |`void Blink(uint16_t time_on, uint16_t time_off);`|Запустить 'мигание' пина со временем `time_on` и `time_off` в мс.|
 |`bool Toggle();`|Переключить состояние пина|
+<<<<<<< HEAD
 |`void StrobeHigh(), StrobeLow();`|Выдать строб-импульс с частотой 1MHz|
+=======
+>>>>>>> f47a6e03c97684ab09fe4ef246c72d919545cb2f
 |`void Processing(uint32_t time = millis())`|Обработка псевдопрерывания|
