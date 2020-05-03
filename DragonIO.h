@@ -80,6 +80,14 @@ class DragonIO
 			return this->_data.state_new;
 		}
 		
+		// Записать в пин указанный уровень.
+		void Write(bool state)
+		{
+			(state == true) ? this->High() : this->Low();
+			
+			return;
+		}
+		
 		// Записать высокий уровень в пин ( OUTPUT ).
 		void High()
 		{

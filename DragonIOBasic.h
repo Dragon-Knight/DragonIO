@@ -15,6 +15,9 @@
 class DragonIOBasic
 {
 	public:
+		// Конструктор без параметров.
+		DragonIOBasic(){}
+		
 		// Конструктор с регистрами, например DragonIOBasic(&PIND, PD3);
 		DragonIOBasic(volatile uint8_t *port, uint8_t pin)
 		{
@@ -67,6 +70,14 @@ class DragonIOBasic
 			this->_data.state_new = DIRECT_READ(this->_data.port, this->_data.pin);
 			
 			return this->_data.state_new;
+		}
+		
+		// Записать в пин указанный уровень.
+		void Write(bool state)
+		{
+			(state == true) ? this->High() : this->Low();
+			
+			return;
 		}
 		
 		// Записать высокий уровень в пин ( OUTPUT ).

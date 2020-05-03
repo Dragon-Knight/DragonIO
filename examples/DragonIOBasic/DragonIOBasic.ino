@@ -10,6 +10,8 @@ void setup()
 	pin1.Output();
 	pin1.Output(true);
 	pin1.Read();
+	pin1.Write(true);
+	pin1.Write(false);
 	pin1.High();
 	pin1.Low();
 	pin1.Toggle();
