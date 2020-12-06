@@ -1,10 +1,13 @@
-#include <DragonIOBasic.h>
+#include <DragonIO.h>
 
-DragonIOBasic pin1(&PINB, PB5);
+DragonIO pin1;
+//DragonIO pin1(&PINB, PB5);
 //DragonIO pin1(13);
 
 void setup()
 {
+	pin1.SetPort(&PINB, PB5);
+	pin1.SetPin(13);
 	pin1.Input();
 	pin1.InputPullup();
 	pin1.Output();
@@ -14,6 +17,8 @@ void setup()
 	pin1.Write(false);
 	pin1.High();
 	pin1.Low();
+	pin1.Raw();
+	pin1.Raw(0b10101010);
 	pin1.Toggle();
 	pin1.StrobeHigh();
 	pin1.StrobeLow();

@@ -7,21 +7,23 @@ void setup()
 {
 	
 	r1.Reset();
+	r1.Enable(true);
 	
 	byte b = 0xff;
 	byte c[] = {0x44, 0x55, 0x66};
-	r1.WriteByte(b);
-	r1.WriteBytes(c, sizeof(c));
-	/*pin1.InputPullup();
-	pin1.Output();
-	pin1.Output(true);
-	pin1.Read();
-	pin1.High();
-	pin1.Low();
-	pin1.Toggle();
-	pin1.StrobeHigh();
-	pin1.StrobeLow();
-	*/
+	r1.Write(b, true);
+	
+	r1.Write(0x01, true); delay(250);
+	r1.Write(0x02, true); delay(250);
+	r1.Write(0x04, true); delay(250);
+	r1.Write(0x08, true); delay(250);
+	r1.Write(0x10, true); delay(250);
+	r1.Write(0x20, true); delay(250);
+	r1.Write(0x40, true); delay(250);
+	r1.Write(0x80, true); delay(250);
+	
+	r1.Write(c, sizeof(c), true);
+	
 	
 	return;
 }

@@ -1,48 +1,56 @@
 /*
-	
-*/
+ * DragonIO595.h
+ * Fast library for 74HC595 chip.
+ *
+ *	@author		Nikolai Tikhonov aka Dragon_Knight <dubki4132@mail.ru>, https://vk.com/globalzone_edev
+ *	@licenses	MIT https://opensource.org/licenses/MIT
+ *	@repo		https://github.com/Dragon-Knight/DragonIO
+ *
+ * Special thanks to valmat https://github.com/valmat
+ *
+ */
 
 #pragma once
 
-#include "DragonIOBasic.h"
+#include "DragonIO.h"
 
 class DragonIO595
 {
 	public:
-		DragonIO595(uint8_t pin_data, uint8_t pin_clock, uint8_t pin_latch)
+		DragonIO595(uint8_t pin_data, uint8_t pin_clock, uint8_t pin_latch, uint8_t pin_enable, uint8_t pin_reset)
 		{
-			this->_pins.di = DragonIOBasic(pin_data);
-			this->_pins.di.Output();
+			_pins.di.SetPin(pin_data);
+			_pins.di.Output(IO_LOW);
 			
-			this->_pins.sh = DragonIOBasic(pin_clock);
-			this->_pins.sh.Output();
+			_pins.sh.SetPin(pin_clock);
+			_pins.sh.Output(IO_LOW);
 			
-			this->_pins.st = DragonIOBasic(pin_latch);
-			this->_pins.st.Output();
+			_pins.st.SetPin(pin_latch);
+			_pins.st.Output(IO_LOW);
 			
-			this->Reset();
+			_pins.oe.SetPin(pin_enable);
+			_pins.oe.Output(IO_HIGH);
+			
+			_pins.mr.SetPin(pin_reset);
+			_pins.mr.Output(IO_LOW);
+			
+			_full_pin = true;
 			
 			return;
 		}
 		
-		DragonIO595(uint8_t pin_data, uint8_t pin_clock, uint8_t pin_latch, uint8_t pin_enable, uint8_t pin_reset)
+		DragonIO595(uint8_t pin_data, uint8_t pin_clock, uint8_t pin_latch)
 		{
-			this->_pins.di = DragonIOBasic(pin_data);
-			this->_pins.di.Output();
+			_pins.di.SetPin(pin_data);
+			_pins.di.Output(IO_LOW);
 			
-			this->_pins.sh = DragonIOBasic(pin_clock);
-			this->_pins.sh.Output();
+			_pins.sh.SetPin(pin_clock);
+			_pins.sh.Output(IO_LOW);
 			
-			this->_pins.st = DragonIOBasic(pin_latch);
-			this->_pins.st.Output();
+			_pins.st.SetPin(pin_latch);
+			_pins.st.Output(IO_LOW);
 			
-			this->_pins.oe = DragonIOBasic(pin_enable);
-			this->_pins.oe.Output(true);
-			
-			this->_pins.mr = DragonIOBasic(pin_reset);
-			this->_pins.mr.Output(true);
-			
-			this->Reset();
+			_full_pin = false;
 			
 			return;
 		}
@@ -50,7 +58,10 @@ class DragonIO595
 		// Включить \ Выключить выход регистра.
 		void Enable(bool mode)
 		{
-			this->_pins.oe.Write(!mode);
+			if(_full_pin == true)
+			{
+				_pins.oe.Write(!mode);
+			}
 			
 			return;
 		}
@@ -58,40 +69,51 @@ class DragonIO595
 		// Сброс регистра.
 		void Reset()
 		{
-			this->_pins.mr.StrobeLow();
+			if(_full_pin == true)
+			{
+				_pins.mr.StrobeLow();
+			}
 			
 			return;
 		}
 		
 		// Записать байт в регистр.
-		void WriteByte(byte data, bool latch = false)
+		void Write(byte data, bool latch = false)
 		{
-			if(latch == true) this->_pins.st.Low();
+			if(latch == true) _pins.st.Low();
 			for(uint8_t i = 0; i < 8; ++i)
 			{
-				this->_pins.di.Write( ((data >> i) & 0x01) == true );
-				this->_pins.sh.StrobeHigh();
+				_pins.di.Write( data & 0b10000000 );
+				data <<= 1;
+				
+				_pins.sh.StrobeHigh();
 			}
-			if(latch == true) this->_pins.st.High();
+			if(latch == true) _pins.st.High();
+			
+			return;
 		}
 		
 		// Записать байты в регистр.
-		void WriteBytes(byte *data, size_t size, bool latch = false)
+		void Write(byte *data, uint8_t size, bool latch = false)
 		{
-			if(latch == true) this->_pins.st.Low();
-			for(uint8_t i = 0; i < size; ++i)
+			if(latch == true) _pins.st.Low();
+			while(--size != 255)
 			{
-				this->WriteByte(data[i], false);
+				Write(data[size], false);
 			}
-			if(latch == true) this->_pins.st.High();
+			if(latch == true) _pins.st.High();
+			
+			return;
 		}
+	
 	private:
 		struct HC595_t
 		{
-			DragonIOBasic di;	// Serial data input.
-			DragonIOBasic sh;	// Shift register clock input.
-			DragonIOBasic st;	// Storage register clock input.
-			DragonIOBasic oe;	// Output enable (active LOW).
-			DragonIOBasic mr;	// Master reset (active LOW).
+			DragonIO di;	// Serial data input.
+			DragonIO sh;	// Shift register clock input.
+			DragonIO st;	// Storage register clock input.
+			DragonIO oe;	// Output enable (active LOW).
+			DragonIO mr;	// Master reset (active LOW).
 		} _pins;
+		bool _full_pin;
 };

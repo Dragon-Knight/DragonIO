@@ -8,10 +8,10 @@ DragonIO pin2(2);
 
 void setup()
 {
-	pin1.Input();
-	pin1.InputPullup();
+	//pin1.Input();
+	//pin1.InputPullup();
 	pin1.Output();
-	pin1.Output(true);
+	/*pin1.Output(true);
 	pin1.RegCallback(pin1_int, DragonIO::TYPE_CHANGE);
 	pin1.Read();
 	pin1.High();
@@ -32,17 +32,21 @@ void setup()
 	pin2.Low();
 	pin2.Low(3210);
 	pin2.Toggle();
-	pin2.Blink(500, 500);
+	pin2.Blink(500, 500);*/
 	
 	return;
 }
 
 void loop()
 {
-	uint32_t ctime = millis();
+	//uint32_t ctime = millis();
 	
-	pin1.Processing(ctime);
-	pin2.Processing(ctime);
+	//pin1.Processing(ctime);
+	//pin2.Processing(ctime);
+	
+	pin1.Strobe();
+	//pin1.High();
+	//pin1.Low();
 	
 	return;
 }
