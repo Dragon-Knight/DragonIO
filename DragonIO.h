@@ -92,10 +92,7 @@ class DragonIO
 		// Прочитать состояние пина ( INPUT, INPUT_PULLUP ).
 		bool Read()
 		{
-			_data.state_old = _data.state_new;
-			_data.state_new = DIRECT_READ(_data.port, _data.pin);
-			
-			return _data.state_new;
+			return DIRECT_READ(_data.port, _data.pin);
 		}
 		
 		// Записать в пин указанный уровень.
@@ -111,9 +108,6 @@ class DragonIO
 		{
 			DIRECT_WRITE_HIGH(_data.port, _data.pin);
 			
-			_data.state_old = _data.state_new;
-			_data.state_new = IO_HIGH;
-			
 			return;
 		}
 		
@@ -121,9 +115,6 @@ class DragonIO
 		void Low()
 		{
 			DIRECT_WRITE_LOW(_data.port, _data.pin);
-			
-			_data.state_old = _data.state_new;
-			_data.state_new = IO_LOW;
 			
 			return;
 		}
@@ -143,11 +134,11 @@ class DragonIO
 		}
 		
 		// Инвертировать состояние пина ( OUTPUT ) и вернуть новое состояние.
-		bool Toggle()
+		void Toggle()
 		{
-			(_data.state_new == IO_HIGH) ? Low() : High();
+			(Read() == IO_HIGH) ? Low() : High();
 			
-			return _data.state_new;
+			return;
 		}
 		
 		// Выдать строб-импульс с максимально возможной скоростью.
@@ -167,10 +158,8 @@ class DragonIO
 		{
 			volatile uint8_t *port;				// Порт пина.
 			uint8_t pin;						// Номер пина в порте.
-			uint8_t state_new:1;				// Текущее состояние пина.
-			uint8_t state_old:1;				// Предыдущие состояние пина.
 			//uint8_t state_default:1;			// Состояние пина при инициализации.
-			uint8_t __offset:6;					// Смещение до байта.
+			//uint8_t __offset:6;				// Смещение до байта.
 		} _data;
 	
 	private:

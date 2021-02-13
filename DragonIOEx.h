@@ -46,6 +46,45 @@ class DragonIOEx : public DragonIO
 			_data_ex.callback_type = type;
 		}
 		
+		// Прочитать состояние пина ( INPUT, INPUT_PULLUP ).
+		bool Read()
+		{
+			_data_ex.state_old = _data_ex.state_new;
+			_data_ex.state_new = DragonIO::Read();
+			
+			return _data_ex.state_new;
+		}
+		
+		// Записать высокий уровень в пин ( OUTPUT ).
+		void High()
+		{
+			DragonIO::High();
+			
+			_data_ex.state_old = _data_ex.state_new;
+			_data_ex.state_new = IO_HIGH;
+			
+			return;
+		}
+		
+		// Записать низкий уровень в пин ( OUTPUT ).
+		void Low()
+		{
+			DragonIO::Low();
+			
+			_data_ex.state_old = _data_ex.state_new;
+			_data_ex.state_new = IO_LOW;
+			
+			return;
+		}
+		
+		// Инвертировать состояние пина ( OUTPUT ) и вернуть новое состояние.
+		bool Toggle()
+		{
+			(_data_ex.state_new == IO_HIGH) ? Low() : High();
+			
+			return _data_ex.state_new;
+		}
+		
 		// Записать высокий уровень в пин ( OUTPUT ) на указанное время.
 		void HighDelay(uint16_t time)
 		{
@@ -94,7 +133,7 @@ class DragonIOEx : public DragonIO
 			{
 				if(_data_ex.delay_time < time)
 				{
-					bool state = DragonIO::Toggle();
+					bool state = Toggle();
 					
 					switch(_data_ex.mode)
 					{
@@ -127,23 +166,23 @@ class DragonIOEx : public DragonIO
 				{
 					case TYPE_LOW:
 					{
-						if(_data.state_new == IO_LOW){ is_run = true; break; }
+						if(_data_ex.state_new == IO_LOW){ is_run = true; break; }
 					}
 					case TYPE_HIGH:
 					{
-						if(_data.state_new == IO_HIGH){ is_run = true; break; }
+						if(_data_ex.state_new == IO_HIGH){ is_run = true; break; }
 					}
 					case TYPE_CHANGE:
 					{
-						if(_data.state_new != _data.state_old){ is_run = true; break; }
+						if(_data_ex.state_new != _data_ex.state_old){ is_run = true; break; }
 					}
 					case TYPE_RISING:
 					{
-						if(_data.state_old == IO_LOW && _data.state_new == IO_HIGH){ is_run = true; break; }
+						if(_data_ex.state_old == IO_LOW && _data_ex.state_new == IO_HIGH){ is_run = true; break; }
 					}
 					case TYPE_FALLING:
 					{
-						if(_data.state_old == IO_HIGH && _data.state_new == IO_LOW){ is_run = true; break; }
+						if(_data_ex.state_old == IO_HIGH && _data_ex.state_new == IO_LOW){ is_run = true; break; }
 					}
 					default:
 					{
@@ -152,26 +191,8 @@ class DragonIOEx : public DragonIO
 				}
 				if(is_run == true)
 				{
-					_data_ex.callback(0, _data_ex.callback_type);
+					_data_ex.callback(_data.pin, _data_ex.callback_type);
 				}
-
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
 			}
 			
 			return;
@@ -185,6 +206,8 @@ class DragonIOEx : public DragonIO
 			mode_t mode:2;						// Текущий режим работы: Обычный пин, С задержкой, Мигалка.
 			callback_type_t callback_type:5;	// Тип псевдопрерывания.
 			uint8_t __offset:1;					// 
+			uint8_t state_new:1;				// Текущее состояние пина.
+			uint8_t state_old:1;				// Предыдущие состояние пина.
 			callback_t callback;				// Колбек псевдопрерывания.
 			uint32_t delay_time;				// Время задержки при MODE_DELAY или MODE_BLINK.
 			uint16_t blinkon_time;				// Время первой стадии 'мигания'.

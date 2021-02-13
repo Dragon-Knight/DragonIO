@@ -13,10 +13,10 @@ void setup()
 	pin1.Output();
 	//pin1.Output(true);
 	//pin1.Read();
-	//pin1.Write(true);
-	//pin1.Write(false);
-	//pin1.High();
-	//pin1.Low();
+	pin1.Write(true);
+	pin1.Write(false);
+	pin1.High();
+	pin1.Low();
 	//pin1.Raw();
 	//pin1.Raw(0b10101010);
 	//pin1.Toggle();
