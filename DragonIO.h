@@ -83,7 +83,6 @@ class DragonIO
 		void Output(bool state = IO_LOW)
 		{
 			DIRECT_MODE_OUTPUT(_data.port, _data.pin);
-			//_data.state_default = state;
 			(state == IO_HIGH) ? High() : Low();
 			
 			return;
@@ -133,7 +132,7 @@ class DragonIO
 			return;
 		}
 		
-		// Инвертировать состояние пина ( OUTPUT ) и вернуть новое состояние.
+		// Инвертировать состояние пина ( OUTPUT ).
 		void Toggle()
 		{
 			(Read() == IO_HIGH) ? Low() : High();
@@ -158,8 +157,6 @@ class DragonIO
 		{
 			volatile uint8_t *port;				// Порт пина.
 			uint8_t pin;						// Номер пина в порте.
-			//uint8_t state_default:1;			// Состояние пина при инициализации.
-			//uint8_t __offset:6;				// Смещение до байта.
 		} _data;
 	
 	private:

@@ -46,6 +46,15 @@ class DragonIOEx : public DragonIO
 			_data_ex.callback_type = type;
 		}
 		
+		// Назначить пин на выход и установить начальное состояние.
+		void Output(bool state = IO_LOW)
+		{
+			DragonIO::Output(state);
+			_data_ex.state_default = state;
+			
+			return;
+		}
+		
 		// Прочитать состояние пина ( INPUT, INPUT_PULLUP ).
 		bool Read()
 		{
@@ -120,7 +129,7 @@ class DragonIOEx : public DragonIO
 		// Остановить мигание и сбросить задержку уровня.
 		void Stop()
 		{
-			//DragonIO::Write( _data.state_default );
+			DragonIO::Write(_data_ex.state_default);
 			_data_ex.mode = MODE_NORMAL;
 			
 			return;
@@ -205,9 +214,10 @@ class DragonIOEx : public DragonIO
 		{
 			mode_t mode:2;						// Текущий режим работы: Обычный пин, С задержкой, Мигалка.
 			callback_type_t callback_type:5;	// Тип псевдопрерывания.
-			uint8_t __offset:1;					// 
+			uint8_t state_default:1;			// Состояние пина при инициализации.
 			uint8_t state_new:1;				// Текущее состояние пина.
 			uint8_t state_old:1;				// Предыдущие состояние пина.
+			uint8_t __offset:6;					// 
 			callback_t callback;				// Колбек псевдопрерывания.
 			uint32_t delay_time;				// Время задержки при MODE_DELAY или MODE_BLINK.
 			uint16_t blinkon_time;				// Время первой стадии 'мигания'.
