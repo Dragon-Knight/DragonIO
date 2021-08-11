@@ -97,7 +97,8 @@ class DragonIOEx : public DragonIO
 		// Записать высокий уровень в пин ( OUTPUT ) на указанное время.
 		void HighDelay(uint16_t time)
 		{
-			DragonIO::High();
+			//DragonIO::High();
+			High();
 			
 			_data_ex.delay_time = millis() + time;
 			_data_ex.mode = MODE_DELAY;
@@ -108,7 +109,8 @@ class DragonIOEx : public DragonIO
 		// Записать низкий уровень в пин ( OUTPUT ) на указанное время.
 		void LowDelay(uint16_t time)
 		{
-			DragonIO::Low();
+			//DragonIO::Low();
+			Low();
 			
 			_data_ex.delay_time = millis() + time;
 			_data_ex.mode = MODE_DELAY;
@@ -168,30 +170,35 @@ class DragonIOEx : public DragonIO
 			
 			if(_data_ex.callback_type != TYPE_NONE)
 			{
-				DragonIO::Read();
+				this->Read();
 				
 				bool is_run = false;
 				switch(_data_ex.callback_type)
 				{
 					case TYPE_LOW:
 					{
-						if(_data_ex.state_new == IO_LOW){ is_run = true; break; }
+						if(_data_ex.state_new == IO_LOW){ is_run = true; }
+						break;
 					}
 					case TYPE_HIGH:
 					{
-						if(_data_ex.state_new == IO_HIGH){ is_run = true; break; }
+						if(_data_ex.state_new == IO_HIGH){ is_run = true; }
+						break;
 					}
 					case TYPE_CHANGE:
 					{
-						if(_data_ex.state_new != _data_ex.state_old){ is_run = true; break; }
+						if(_data_ex.state_new != _data_ex.state_old){ is_run = true; }
+						break;
 					}
 					case TYPE_RISING:
 					{
-						if(_data_ex.state_old == IO_LOW && _data_ex.state_new == IO_HIGH){ is_run = true; break; }
+						if(_data_ex.state_old == IO_LOW && _data_ex.state_new == IO_HIGH){ is_run = true; }
+						break;
 					}
 					case TYPE_FALLING:
 					{
-						if(_data_ex.state_old == IO_HIGH && _data_ex.state_new == IO_LOW){ is_run = true; break; }
+						if(_data_ex.state_old == IO_HIGH && _data_ex.state_new == IO_LOW){ is_run = true; }
+						break;
 					}
 					default:
 					{
