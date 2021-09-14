@@ -119,15 +119,15 @@ class DragonIO
 		}
 		
 		// Прочитать значение порта целиком ( INPUT, INPUT_PULLUP ).
-		byte Raw()
+		uint8_t Raw()
 		{
 			return *_data.port;
 		}
 		
 		// Записать значение порта целиком ( OUTPUT ).
-		void Raw(byte data)
+		void Raw(uint8_t data)
 		{
-			*_data.port = data;
+			*(_data.port+2) = data;
 			
 			return;
 		}
